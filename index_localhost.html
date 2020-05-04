@@ -1,0 +1,600 @@
+<!--
+ 
+Khalil Shazam
+
+Philip Sulinski
+
+Riley Walls
+
+-->
+<!doctype html>
+<html lang="en-CA">
+<meta charset="UTF-8">
+<html>
+
+<head>
+	<title>Weather Web App</title>
+	
+	 <!-- Include meta tag to ensure proper rendering and touch zooming -->
+	 <meta name='viewport' content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" >
+	
+	
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment.min.js"></script><!--uses jquery to work--> 
+	<script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+	<link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css" />
+	<script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+	
+	<!--using Phil's google key-->
+	<!--callback method is initLoadMap-->
+	<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDBQiwo0x14z3eJnKtxvJZG2w5RFEuCXS4&libraries=places&callback=initLoadMap" async defer></script>
+ 
+	<style>
+		table{
+			font-weight: bold;
+			border-collapse: separate;
+			border-spacing: 20px;
+			width:400px;
+		}
+	</style>
+ 
+</head>
+
+<body>
+<!--Page 1---------------------------------------------------------------------------------------------------------------------->
+
+	<div data-role="page" id="page1">
+	  <div data-role="panel" id="compare_Panel"> 
+	  
+			<a href="#page2" data-transition='slideup' class='ui-btn ui-icon-star ui-btn-icon-right'>Compare </a>
+	  </div> 
+	  
+	  <div data-role="header" class='header' style="background-color:black; color:white; text-shadow:black">
+			<div style="display:inline;" >
+	    		<a href="#" id='menu' class="ui-nodisc-icon ui-btn ui-corner-all ui-icon-bars ui-btn-icon-notext ui-btn-b ui-btn-inline">Delete</a>
+	     	</div>
+			<h3  style="display:inline;">Weather App</h3> 
+		
+		</div>
+
+	  <div data-role="main" class="ui-content">
+				<div style="width:75%;">
+					<input type="text" name="city" id="city">
+					<button type="submit" onclick="loadWeather();" value="Submit">Search</button>
+					<h2 id='city_label'></h2>
+					<canvas id="myChart"></canvas>
+					<div id="output1">
+					</div>
+				</div>
+		
+	  </div> 
+	</div>
+		
+<!--Page 2---------------------------------------------------------------------------------------------------------------------->	
+		
+				
+	<div id='page2' data-role='page'> 
+	<div data-role="header"  style="background-color:black; color:white;">
+			<div style="display:inline;" >
+	    		<a href="#page1" class="ui-nodisc-icon ui-btn ui-corner-all ui-icon-arrow-l ui-btn-icon-notext ui-btn-b ui-btn-inline">Delete</a>
+	     	</div>
+			<h2  style="display:inline;">Compare Weather</h2> 
+		
+		</div>
+		  <div data-role="main" class="ui-content">
+				<div style="width:75%;">
+					<input type="text" name="city" id="comp_city1" placeholder="City 1">
+					<input type="text" name="city" id="comp_city2" placeholder="City 2">
+					<input type="text" name="city" id="comp_city3" placeholder="City 3">
+					
+					<a id='compare_Weather' data-transition='slideup' class='ui-btn ui-icon-search ui-btn-icon-right'>Compare Weather</a>
+					<canvas id="triple_Chart"></canvas>
+					<div id="output2">
+					</div>
+				</div>
+		
+	  </div>
+<!---JQM script--------------------------------------------------------------------------------------------------------------------->			
+<script>
+
+//input and autocomplete varables
+var cityl;
+var autocomplete1;
+
+var comp_city1;
+var autocomplete2;
+
+var comp_city2;
+var autocomplete3;
+
+var comp_city3;
+var autocomplete4;
+	
+
+	$(function(){
+	
+		//hide jQuerymobile loading spinner
+	
+		$(".ui-icon-loading").hide();
+	
+	});
+	
+	//events
+	
+	$('#menu').click(function (event) { 
+
+		$('#compare_Panel').panel( "open" );
+		
+	
+		
+	});
+	$("#compare_Weather").click(function (e) {
+	
+		init_Triple_Graph();
+		
+	});
+	
+		
+		var chart;
+		
+		
+		
+		//load by coordinates
+		
+		function loadWeatherByCoords(lat,lon) {
+			
+			var url = 'https://api.openweathermap.org/data/2.5/forecast?lat='+lat+'&lon='+lon+'&appid=7f4177329658adcc0dd7a57d55f8d4bb';
+
+			  $.ajax({
+				url: url,
+				type: 'GET',
+				dataType: 'JSON',
+				success: function(resp) {
+					update_City1(resp);
+					var temp_url = 'https://api.openweathermap.org/data/2.5/weather?lat='+lat+'&lon='+lon+'&appid=7f4177329658adcc0dd7a57d55f8d4bb';
+					output(temp_url);
+					
+				}
+			
+			  });
+		}
+		
+		//load by location
+	
+		function loadWeather() {//ajax call to get the 5 day forcast in a JSON object. 
+		
+			try{
+			  
+			 
+				if(document.getElementById('city').value!=autocomplete1.getPlace().formatted_address){
+				
+					throw new Error('Error');
+				}
+				lat = autocomplete1.getPlace().geometry.location.lat();
+				
+				lon = autocomplete1.getPlace().geometry.location.lng();
+			   
+			
+				var url = 'https://api.openweathermap.org/data/2.5/forecast?lat='+lat+'&lon='+lon+'&appid=7f4177329658adcc0dd7a57d55f8d4bb';
+
+				  $.ajax({
+					url: url,
+					type: 'GET',
+					dataType: 'JSON',
+					success: function(resp) {
+						update_City1(resp);
+						$('#output1').html('');
+						 generateTextOutputCity(autocomplete1);
+					},
+							 error: function(){
+									
+								alert("Empty or Invalid city. Make sure to use the auto complete options.");
+							}
+				
+				  });
+			}catch(err){
+				    	alert("Unable to find location. Make sure to use the auto complete options.");
+						console.log("Developer");
+				}
+				  
+		}
+		
+		//get coordinates based off of user location using Google API
+		
+		function getLocation() {
+			//get location using navigator
+			if(navigator.geolocation){
+				navigator.geolocation.getCurrentPosition(showPosition);
+			}
+			else{
+				console.log("Geolocation is not supported by this browser.");
+			}
+		}
+
+		
+		function showPosition(position) {
+			//display the latitude and longitude
+			
+			loadWeatherByCoords(position.coords.latitude, position.coords.longitude);
+			
+		} 
+		
+		//initially load the data based on coordinates then enable autocomplete
+
+		function initLoadMap() {
+			
+			getLocation();
+			
+			initMap();
+			
+
+		}
+		
+		//adding the input textboxes to Google API autocomplete (to show cities when typing)
+		
+		function initMap() {
+		
+			city = document.getElementById('city');
+			autocomplete1 = new google.maps.places.Autocomplete(city);
+			
+			comp_city1 = document.getElementById('comp_city1');
+			autocomplete2 = new google.maps.places.Autocomplete(comp_city1);
+
+			comp_city2 = document.getElementById('comp_city2');
+			autocomplete3 = new google.maps.places.Autocomplete(comp_city2);
+
+			comp_city3 = document.getElementById('comp_city3');
+			autocomplete4 = new google.maps.places.Autocomplete(comp_city3);
+		
+
+		}
+		
+		//initially loaded chart
+		
+		//2-d chart only uses x and y axis
+		var ctx = document.getElementById('myChart').getContext('2d');// CanvasRenderingContext2D
+		
+		var ctx_page2 = document.getElementById('triple_Chart').getContext('2d');// grabs canvas for triple graph
+		
+		chart = new Chart(ctx,{
+		
+			type: 'bar',
+			data: {
+			
+				datasets:[//each line is a chart object
+					{   type:'line',
+						label:"Temperature",
+						fill:false,
+						backgroundColor:'rgba(124,44,55,0.4)',
+						borderColor:'rgb(124,44,55)',
+					},
+					{   type:'bar',
+						yAxisID: 'Rain',
+						label:"Rain",
+						fill:true,
+						backgroundColor:'rgba(30,44,100,0.4)',
+						borderColor:'rgb(50,55,100)',
+					}
+				]
+			
+			},
+			options:{
+				scales:{
+					xAxes: [{
+						display: true,
+						scaleLabel:{
+							display: true,
+							labelString:'Date'
+						}
+					}],
+					yAxes:[{
+						display: true,
+						scaleLabel:{
+							display: true,
+							labelString:'Temperature',
+							
+							},
+							ticks: {
+								callback: function(value) {
+								return value+'°C';
+								}
+						}
+					},
+					{
+						id: 'Rain',
+						display: true,
+						position:'right',
+						scaleLabel:{
+							display: true,
+							labelString:'Rainfall',
+							
+						},
+						ticks: {
+								callback: function(value) {
+								return value+' mm';
+								}
+							}
+					}
+					
+					
+					]
+				
+				}
+			}
+		
+		});
+		
+		//Triple graph chart for page2
+		chart_page2 = new Chart(ctx_page2,{
+		
+			type: 'bar',
+			data: {
+			
+				labels:[''],//x-axis
+				datasets:[//each line is an object
+					{   type:'line',
+						label:"City 1",
+						fill:false,
+						backgroundColor:'rgba(124,44,55,0.4)',
+						borderColor:'rgb(124,44,55)',
+						data:[0]//y-axis
+					},
+					{   type:'line',
+						label:"City2",
+						fill:false,
+						backgroundColor:'rgba(30,44,100,0.4)',
+						borderColor:'rgb(50,55,100)',
+						data:[0]//y-axis
+					}
+					,
+					{   type:'line',
+						label:"City3",
+						fill:false,
+						backgroundColor:'rgba(0,255,0,0.4)',
+						borderColor:'green',
+						data:[0]
+					}
+				]
+			
+			},
+			options:{
+				scales:{
+					xAxes: [{
+						display: true,
+						scaleLabel:{
+							display: true,
+							labelString:'Date'
+						}
+					}],
+					yAxes:[{
+						display: true,
+						scaleLabel:{
+							display: true,
+							labelString:'Temperature'
+						},
+							ticks: {
+								callback: function(value) {
+								return value+'°C';
+								}
+							}
+					}
+					
+					
+					]
+				
+				}
+			}
+		
+		});
+		
+		//calls get_Temperature for each city being compares. get_Temperature is the AJAX call
+		function init_Triple_Graph(){		
+		
+			//clear datasets
+			for(var i=0;i<3;i++){
+				chart_page2.data.datasets[i].data=new Array();
+				 chart_page2.data.datasets[i].label="";
+			}
+			
+			$('#output2').html('');
+		    
+			if($('#comp_city1').val() !== '') {
+				
+				get_Temperature(autocomplete2,0);
+				}
+		
+			
+			if($('#comp_city2').val() !== ''){
+
+			         get_Temperature(autocomplete3,1);
+				}
+		
+			
+			  if($('#comp_city3').val() !== ''){
+
+				 get_Temperature(autocomplete4,2);
+				}
+		
+		}
+	
+		//Updates a dataset for a particular city
+		function update_Triple_Graph(resp,city_num){
+
+			var temps=new Array();
+			var dates=new Array();
+	
+			
+			$.each(resp.list, function(index, val) {
+				temps.push((val.main.temp)-273.15);
+				dates.push(moment(val.dt_txt).format('DD MMM HH:mm'));
+
+			});
+			
+			chart_page2.data.datasets[city_num].label=resp.city.name;
+			
+			chart_page2.data.datasets[city_num].data=temps;
+			
+		
+			chart_page2.data.labels=dates;
+			
+			chart_page2.update();
+			
+			
+		
+		
+		}
+			//page2 call to get forecast for cities
+			function get_Temperature(autocomplete,city_num) {//ajax call to get the 5 day forecast in a JSON object. 
+		
+			
+				try{
+				    
+					if(document.getElementById('comp_city'+(city_num+1)).value!=autocomplete.getPlace().formatted_address){
+				
+						throw new Error('Error');
+				}	
+					lat = autocomplete.getPlace().geometry.location.lat();
+					lon = autocomplete.getPlace().geometry.location.lng();
+
+				var url = 'https://api.openweathermap.org/data/2.5/forecast?lat='+lat+'&lon='+lon+'&appid=7f4177329658adcc0dd7a57d55f8d4bb';
+
+			  $.ajax({
+				url: url,
+				type: 'GET',
+				dataType: 'JSON',
+				success: function(resp) {
+					update_Triple_Graph(resp,city_num);
+					generateTextOutputCity(autocomplete);
+					
+				}
+						
+			
+			  });
+			  }catch(err){
+				    	alert("Unable to find information about City "+(city_num+1)+". Make sure to use the auto complete options.");
+				}
+		}
+		
+		//add data from openweathermap API to datasets that are to be loaded in the chart
+	
+		function update_City1(resp) {//updates first dataset/city
+			
+		   document.getElementById('city_label').text=resp.city.name;
+			var temps=new Array();
+			var dates=new Array();
+			var rainfall=new Array();
+			
+			$.each(resp.list, function(index, val) {
+				temps.push((val.main.temp)-273.15);
+				dates.push(moment(val.dt_txt).format('DD MMM HH:mm'));//moment.js date formatting
+				
+			if(val.rain !== undefined){
+			  rainfall.push(val.rain['3h']);
+			 }
+			 
+				
+			});
+			
+			
+			chart.data.datasets[0].data=temps;
+			chart.data.datasets[1].data=rainfall;
+		
+			chart.data.labels=dates;
+			
+			chart.update();
+			
+		
+		}
+		
+		//initial page load based on latitude and longitude
+		
+		function generateTextOutputCity(autocomplete){
+				
+				try{
+					lat = autocomplete.getPlace().geometry.location.lat();
+				
+					lon = autocomplete.getPlace().geometry.location.lng();
+				}catch(err){
+				    	alert("Unable to find information location. Make sure to use the auto complete options.");
+				}
+		
+			var url = 'https://api.openweathermap.org/data/2.5/weather?lat='+lat+'&lon='+lon+'&appid=7f4177329658adcc0dd7a57d55f8d4bb';
+		
+			output(url);
+				 
+		}   
+
+		//bottom information for city
+		
+		function output(url){
+		
+		var pagenum = $.mobile.activePage[0];
+		
+		var page = 1;
+		
+		if(pagenum.id == "page2")
+		{
+			page = 2;
+		}
+		
+		$.ajax({
+					url: url,
+					type: 'GET',
+					dataType: 'JSON',
+					success: function(resp) {
+
+						var sunrise = '';
+						var sunset = '';
+						
+						var sunrise = moment.unix(resp.sys.sunrise).format('HH:mm');
+
+						var sunset = moment.unix(resp.sys.sunset).format('HH:mm');
+						
+						$('#output'+page).append('<h2>Weather in ' + resp.name + ', ' + resp.sys.country + '</h2>');
+						
+						var currentTemp = resp.main.temp -273.15;
+						
+						$('#output'+page).append("<img src='//api.openweathermap.org/img/w/"+resp.weather[0].icon+"'/>");
+						$('#output'+page).append("<h2 style='display: inline;'>"+currentTemp.toFixed(0)+"°C"+"</h2>");
+						$('#output'+page).append("<p>"+resp.weather[0].description+"</p>");
+						$('#output'+page).append('<table>' +
+											  '<tr>' +
+												'<td>Clouds</td>' +
+												'<td>' + resp.clouds.all + '%</td>' +
+											 '</tr>' +
+											  '<tr>' +
+												'<td>Humidity</td>' +
+												'<td>' + resp.main.humidity + '%</td>' +
+											  '</tr>' +
+											  '<tr>' +
+												'<td>Wind</td>' +
+												'<td>Speed: ' + resp.wind.speed + '</td>' +
+											  '</tr>' +
+											  '<tr>' +
+												'<td>Pressure</td>' +
+												'<td>' + resp.main.pressure + 'hpa</td>' +
+											  '</tr>' +
+											  '<tr>' +
+												'<td>Sunrise</td>' +
+												'<td>' + sunrise + '</td>' +
+											  '</tr>' +
+											  '<tr>' +
+												'<td>Sunset</td>' +
+												'<td>' + sunset + '</td>' +
+											  '</tr>' +
+											'</table><hr>');
+					}   
+				  });
+		
+		}
+       
+		//the onLoad gets rid of the "google undefined" error
+	   	$( document ).load(function(){
+			initLoadMap();	
+		});
+		
+	</script>
+</body>
+
+</html>
