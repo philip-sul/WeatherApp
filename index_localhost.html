@@ -555,7 +555,7 @@ var autocomplete4;
 						
 						var currentTemp = resp.main.temp -273.15;
 						
-						$('#output'+page).append("<img src='//api.openweathermap.org/img/w/"+resp.weather[0].icon+"'/>");
+						$('#output'+page).append("<img src='https://api.openweathermap.org/img/w/"+resp.weather[0].icon+"'/>");
 						$('#output'+page).append("<h2 style='display: inline;'>"+currentTemp.toFixed(0)+"°C"+"</h2>");
 						$('#output'+page).append("<p>"+resp.weather[0].description+"</p>");
 						$('#output'+page).append('<table>' +
