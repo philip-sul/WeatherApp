@@ -9,7 +9,7 @@
 <div>
   <img src="https://github.com/philip-sul/WeatherApp/raw/master/images/location_page_load.png" alt="location page load" height="75%" width="75%">
   <ul>
-    <li>An example of how a graph would look</li>
+    <li>An example of a graph</li>
     <li>Notice: the free version of OpenWeather API only provides rain data for ~24-72 hours at a time (if there is any precipitation)</li>
   </ul>
 </div>
@@ -20,7 +20,7 @@
   <img src="https://github.com/philip-sul/WeatherApp/raw/master/images/ask_location.png" alt="ask location" height="75%" width="75%">
   <ul>
     <li>Google Location API asking for your location</li>
-    <li>It will result in something like the first image (above)</li>
+    <li>It will result in something like the graph above</li>
   </ul>
 </div>
 
